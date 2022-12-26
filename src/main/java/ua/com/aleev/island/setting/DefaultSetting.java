@@ -8,6 +8,8 @@ public class DefaultSetting {
     public static final int ROWS = 70;
     public static final int COLS = 20;
 
+    public static final int POSITIONS_FOR_SHOW_IN_ONE_CELL = 5;
+
     public static final int PERIOD = 1000;
     public static final int PERCENT_ANIMAL_SLIM = 10;
 

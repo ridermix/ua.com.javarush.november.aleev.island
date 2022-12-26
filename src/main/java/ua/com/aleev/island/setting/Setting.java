@@ -41,7 +41,7 @@ public class Setting {
 
     private int rows;
     private int cols;
-
+    private int positionForShowInOneCell;
     private int period;
     private int percentAnimalSlim;
     private final Map<String, Map<String, Integer>> rationMap = new LinkedHashMap<>();
@@ -60,6 +60,7 @@ public class Setting {
     private void loadFromDefaultSetting() {
         rows = DefaultSetting.ROWS;
         cols = DefaultSetting.COLS;
+        positionForShowInOneCell = DefaultSetting.POSITIONS_FOR_SHOW_IN_ONE_CELL;
 
         period = DefaultSetting.PERIOD;
         percentAnimalSlim = DefaultSetting.PERCENT_ANIMAL_SLIM;
@@ -93,6 +94,10 @@ public class Setting {
 
     public int getCols() {
         return cols;
+    }
+
+    public int getPositionForShowInOneCell() {
+        return positionForShowInOneCell;
     }
 
     public int getPeriod() {

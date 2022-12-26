@@ -1,6 +1,7 @@
 ---
 rows: 10
 cols: 10
+positionForShowInOneCell: 5
 period: 500
 percentAnimalSlim: 10
 rationMap:

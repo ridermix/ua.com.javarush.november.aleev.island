@@ -3,6 +3,7 @@ package ua.com.aleev.island.view;
 import ua.com.aleev.island.entity.map.GameMap;
 import ua.com.aleev.island.entity.map.Location;
 import ua.com.aleev.island.entity.organism.Organism;
+import ua.com.aleev.island.setting.Setting;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +13,7 @@ import java.util.stream.IntStream;
 
 public class ConsoleView implements View {
     private final GameMap gameMap;
-    private final int positions = 5;
+    private final int positions = Setting.getSetting().getPositionForShowInOneCell();
     private final String border = "=".repeat(positions);
 
     public ConsoleView(GameMap gameMap) {
