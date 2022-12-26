@@ -7,9 +7,13 @@ import ua.com.aleev.island.entity.organism.Organism;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ConsoleView implements View {
     private final GameMap gameMap;
+    private final int positions = 5;
+    private final String border = "=".repeat(positions);
 
     public ConsoleView(GameMap gameMap) {
         this.gameMap = gameMap;
@@ -17,7 +21,7 @@ public class ConsoleView implements View {
 
 
     @Override
-    public void showStatistics() {
+    public String showStatistics() {
         Location[][] locations = gameMap.getLocations();
         Map<String, Integer> map = new HashMap<>();
         for (Location[] row : locations) {
@@ -32,7 +36,7 @@ public class ConsoleView implements View {
             System.out.println();
 
         }
-
+        return map.toString();
     }
 
     @Override
@@ -57,6 +61,45 @@ public class ConsoleView implements View {
         System.out.print(statistics + "\n");
         System.out.println("=".repeat(100));
 
+    }
+
+    @Override
+    public String showMap() {
+        Location[][] locations = gameMap.getLocations();
+        final int cols = gameMap.getCols();
+        final int rows = gameMap.getRows();
+        int oneLocationWidth = positions + 1;
+        int mapWidth = oneLocationWidth * cols + 2;
+        StringBuilder out = new StringBuilder();
+        for (int row = 0; row < rows; row++) {
+            out.append(row == 0
+                            ? boardLine(cols, '╔', '╦', '╗')
+                            : boardLine(cols, '╠', '╬', '╣'))
+                    .append("\n");
+            for (int col = 0; col < cols; col++) {
+                String residentString = getInstance(locations[row][col]);
+                out.append(String.format("║%-" + positions + "s", residentString));
+            }
+            out.append('║').append("\n");
+        }
+        out.append(boardLine(cols, '╚', '╩', '╝')).append("\n");
+        System.out.println(out);
+        return out.toString();
+    }
+
+    private String getInstance(Location location) {
+        return location.getResidents().values().stream()
+                .filter((list) -> list.size() > 0)
+                .sorted((o1, o2) -> o2.size() - o1.size())
+                .limit(positions)
+                .map(list -> list.stream().findAny().get().getClass().getSimpleName()
+                        .substring(0, 1)).map(Object::toString).collect(Collectors.joining());
+    }
+
+    private String boardLine(int cols, char left, char center, char right) {
+        return (IntStream.range(0, cols)
+                .mapToObj(col -> (col == 0 ? left : center) + border)
+                .collect(Collectors.joining("", "", String.valueOf(right))));
     }
 
 }

@@ -1,7 +1,9 @@
 package ua.com.aleev.island.view;
 
 public interface View {
-    void showStatistics();
+    String showStatistics();
 
     void showGeneralStatistics();
+
+    String showMap();
 }
