@@ -4,10 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import ua.com.aleev.island.entity.organism.Organism;
-import ua.com.aleev.island.entity.organism.animal.carnivore.Wolf;
-import ua.com.aleev.island.entity.organism.animal.herbivore.Caterpillar;
-import ua.com.aleev.island.entity.organism.animal.herbivore.Duck;
-import ua.com.aleev.island.entity.organism.animal.herbivore.Horse;
+import ua.com.aleev.island.entity.organism.animal.carnivore.*;
+import ua.com.aleev.island.entity.organism.animal.herbivore.*;
 import ua.com.aleev.island.entity.organism.plants.Plant;
 import ua.com.aleev.island.exception.GameException;
 import ua.com.aleev.island.factory.OrganismCreator;
@@ -20,7 +18,11 @@ import java.util.Objects;
 
 public class Setting {
     public static final String SETTING_YAML = "src/main/resources/config.yaml";
-    private static final Class<?>[] TYPES = {Wolf.class, Horse.class, Duck.class, Caterpillar.class, Plant.class};
+    private static final Class<?>[] TYPES = {
+            Wolf.class, Boa.class, Fox.class, Bear.class, Eagle.class,
+            Horse.class, Deer.class, Rabbit.class, Mouse.class, Goat.class, Sheep.class, Boar.class, Buffalo.class, Duck.class, Caterpillar.class,
+            Plant.class
+    };
     public static final Organism[] PROTOTYPES = OrganismCreator.createPrototype(TYPES);
 
     private static volatile Setting SETTING;
