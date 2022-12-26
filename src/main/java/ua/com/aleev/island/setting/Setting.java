@@ -9,7 +9,6 @@ import ua.com.aleev.island.entity.organism.animal.herbivore.*;
 import ua.com.aleev.island.entity.organism.plants.Plant;
 import ua.com.aleev.island.exception.GameException;
 import ua.com.aleev.island.factory.OrganismCreator;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedHashMap;

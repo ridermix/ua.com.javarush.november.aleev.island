@@ -4,7 +4,6 @@ import ua.com.aleev.island.entity.map.GameMap;
 import ua.com.aleev.island.entity.map.Location;
 import ua.com.aleev.island.entity.organism.Organism;
 import ua.com.aleev.island.setting.Setting;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
