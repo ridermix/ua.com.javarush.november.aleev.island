@@ -4,7 +4,6 @@ import ua.com.aleev.island.action.Reproducible;
 import ua.com.aleev.island.entity.map.Location;
 import ua.com.aleev.island.exception.GameException;
 import ua.com.aleev.island.util.Randomizer;
-
 import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class Organism implements Cloneable, Reproducible {
@@ -20,7 +19,6 @@ public abstract class Organism implements Cloneable, Reproducible {
     public Organism(String name, String icon, Limit limit) {
         this.name = name;
         this.icon = icon;
-//        this.weight = weight;
         this.limit = limit;
         weight = Randomizer.random(limit.getMaxWeight()/2,limit.getMaxWeight());
     }

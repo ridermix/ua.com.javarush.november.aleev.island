@@ -3,7 +3,6 @@ package ua.com.aleev.island.view;
 import ua.com.aleev.island.entity.map.GameMap;
 import ua.com.aleev.island.entity.map.Location;
 import ua.com.aleev.island.entity.organism.Organism;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -53,9 +52,9 @@ public class ConsoleView implements View {
                 }
             }
         }
-        System.out.println("=".repeat(82));
+        System.out.println("=".repeat(100));
         System.out.print(statistics + "\n");
-        System.out.println("=".repeat(82));
+        System.out.println("=".repeat(100));
 
     }
 }

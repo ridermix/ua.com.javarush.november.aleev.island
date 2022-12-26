@@ -7,7 +7,6 @@ import ua.com.aleev.island.entity.organism.Limit;
 import ua.com.aleev.island.entity.organism.Organism;
 import ua.com.aleev.island.setting.Setting;
 import ua.com.aleev.island.util.Randomizer;
-
 import java.util.*;
 
 public abstract class Animal extends Organism implements Movable, Eating {
