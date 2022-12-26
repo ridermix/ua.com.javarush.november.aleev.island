@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class DefaultSetting {
     //General setting
     //Island setting
-    public static final int ROWS = 15;
-    public static final int COLS = 15;
+    public static final int ROWS = 70;
+    public static final int COLS = 20;
 
-    public static final int PERIOD = 500;
+    public static final int PERIOD = 1000;
     public static final int PERCENT_ANIMAL_SLIM = 10;
 
     //Organisms settings

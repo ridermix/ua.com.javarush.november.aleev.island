@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@OrganismTypeData(name = "Plant", icon = "\uD83C\uDF3F", maxWeight = 1, maxCount = 200, maxSpeed = 0, maxFood = 0)
+@OrganismTypeData(name = "Plant", icon = "\uD83C\uDF3F", maxWeight = 1, maxCount = 10000, maxSpeed = 0, maxFood = 0)
 public class Plant extends Organism {
 
     public Plant(String name, String icon, double weight, Limit limit) {
@@ -28,7 +28,7 @@ public class Plant extends Organism {
             Set<Organism> plants = currentLocation.getResidents().get(this.getType());
 
             if(plants !=null){
-                if (plants.size() < this.getLimit().getMaxCount()) {
+                if (plants.size() < (this.getLimit().getMaxCount())) {
                     Organism clone = this.clone();
                     clone.setWeight(this.getLimit().getMaxWeight());
                     plants.add(clone);
