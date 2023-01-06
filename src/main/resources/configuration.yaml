@@ -186,7 +186,7 @@ parameters:
     speed: 0
     foodWeight: 0.0
   - name: "Plant"
-    icon: "🌱"
+    icon: "🌿"
     maxWeight: 1
     minWeight: 0.0
     startWeightDivisor: 1

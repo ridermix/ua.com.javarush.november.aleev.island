@@ -5,6 +5,7 @@ import ua.com.aleev.island.entity.organism.animal.herbivore.Herbivore;
 import ua.com.aleev.island.entity.organism.animal.carivore.Carnivore;
 import ua.com.aleev.island.entity.map.Location;
 import ua.com.aleev.island.entity.map.GameMap;
+import ua.com.aleev.island.entity.organism.plant.Plant;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,12 +47,13 @@ public class ConsoleView implements View {
         StringBuilder out = new StringBuilder("\n");
         Location[][] locations = gameMap.getLocations();
         final int cols = gameMap.WIDTH;
+
         final int rows = gameMap.HEIGHT;
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                String residentSting = get(locations[row][col]);
+                String residentString = get(locations[row][col]);
                 int cellWidth = 4;
-                out.append(String.format("║%-" + cellWidth + "s", residentSting));
+                out.append(String.format("║%-" + cellWidth + "s", residentString));
             }
             out.append('║').append("\n");
         }
@@ -60,21 +62,21 @@ public class ConsoleView implements View {
     }
 
     private String get(Location location) {
-        int[] plantsCount = getPlantCount(location);
-        MaxCountAnimal herbivoreMaxCount = getMaxAnimalCount(location, Herbivore.class);
-        MaxCountAnimal predatorMaxCount = getMaxAnimalCount(location, Carnivore.class);
-        return predatorMaxCount.getIcon() + "|" + herbivoreMaxCount.getIcon();
+        MaxCountOrganism herbivoreMaxCount = getMaxAnimalCount(location, Herbivore.class);
+        MaxCountOrganism predatorMaxCount = getMaxAnimalCount(location, Carnivore.class);
+        MaxCountOrganism plantMaxCount = getMaxAnimalCount(location, Plant.class);
+        return predatorMaxCount.getIcon() + "|" + herbivoreMaxCount.getIcon() + "|" + plantMaxCount.getIcon();
     }
 
-    private MaxCountAnimal getMaxAnimalCount(Location location, Class<?> clazz) {
+    private MaxCountOrganism getMaxAnimalCount(Location location, Class<?> clazz) {
         location.getLock().lock();
-        MaxCountAnimal maxCountAnimal = location.getResidents().values().stream()
+        MaxCountOrganism maxCountOrganism = location.getResidents().values().stream()
                 .filter((list) -> list.size() > 0)
                 .filter((list) -> clazz.isAssignableFrom(list.iterator().next().getClass()))
                 .sorted((o1, o2) -> o2.size() - o1.size())
                 .limit(1)
                 .map(list -> {
-                    MaxCountAnimal maxAnimal = new MaxCountAnimal("  ", 0);
+                    MaxCountOrganism maxAnimal = new MaxCountOrganism("  ", 0);
                     Organism organism = list.stream().findAny().orElseThrow();
                     int maxCount = organism.getLimit().getCOUNT_ON_CELL();
                     String animalIcon = organism.getIcon();
@@ -82,9 +84,9 @@ public class ConsoleView implements View {
                     maxAnimal.setCount(list.size());
                     return maxAnimal;
                 })
-                .findAny().orElseGet(MaxCountAnimal::new);
+                .findAny().orElseGet(MaxCountOrganism::new);
         location.getLock().unlock();
-        return maxCountAnimal;
+        return maxCountOrganism;
     }
 
     private int[] getPlantCount(Location location) {

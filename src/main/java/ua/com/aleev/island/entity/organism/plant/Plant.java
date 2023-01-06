@@ -15,7 +15,7 @@ public class Plant extends Organism {
     }
 
     public Plant() {
-        super("Plant", "\uD83C\uDF31", limit.getMAX_WEIGHT(), limit);
+        super("Plant", "\uD83C\uDF3F", limit.getMAX_WEIGHT(), limit);
     }
 
     public Plant(String name, String icon, double weight, Limit limit) {

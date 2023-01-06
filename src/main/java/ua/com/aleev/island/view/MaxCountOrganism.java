@@ -1,15 +1,15 @@
 package ua.com.aleev.island.view;
 
-public class MaxCountAnimal {
+public class MaxCountOrganism {
     private String icon;
     private int count;
 
-    public MaxCountAnimal() {
+    public MaxCountOrganism() {
         this.icon = "  ";
         this.count = 0;
     }
 
-    public MaxCountAnimal(String icon, int count) {
+    public MaxCountOrganism(String icon, int count) {
         this.icon = icon;
         this.count = count;
     }
