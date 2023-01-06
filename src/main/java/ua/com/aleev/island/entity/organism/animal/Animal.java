@@ -1,54 +1,135 @@
 package ua.com.aleev.island.entity.organism.animal;
 
-import ua.com.aleev.island.action.Eating;
+import ua.com.aleev.island.action.Eatable;
 import ua.com.aleev.island.action.Movable;
-import ua.com.aleev.island.entity.map.Location;
+import ua.com.aleev.island.setting.Setting;
+import ua.com.aleev.island.constant.Sex;
 import ua.com.aleev.island.entity.organism.Limit;
 import ua.com.aleev.island.entity.organism.Organism;
-import ua.com.aleev.island.setting.Setting;
+import ua.com.aleev.island.entity.map.Location;
+import ua.com.aleev.island.exception.GameException;
 import ua.com.aleev.island.util.Randomizer;
-import java.util.*;
 
-public abstract class Animal extends Organism implements Movable, Eating {
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+public abstract class Animal extends Organism implements Eatable, Movable {
 
-    public Animal(String name, String icon, Limit limit) {
-        super(name, icon, limit);
+    private Sex sex;
+
+    public Animal(String name, String icon, double weight, Limit limit, Sex sex) {
+
+        super(name, icon, weight, limit);
+        this.sex = sex;
+    }
+
+    public Sex getSex() {
+        return sex;
+    }
+
+    public void setSex(Sex sex) {
+        this.sex = sex;
     }
 
     @Override
-    public Location move(Location startLocation) {
-        int countStep = this.getLimit().getMaxSpeed();
-        Location destinationLocation = startLocation.getNextLocations(countStep);
-        removeMe(startLocation);
-        addMe(destinationLocation);
-        return destinationLocation;
+    public boolean eat(Location currentLocation) {
+        currentLocation.getLock().lock();
+        try {
+            double needToEat = getWeightToEat();
+            if (!(needToEat <= 0)) {
+                Setting setting = Setting.get();
+                Map<String, Integer> foodMap = setting.getFoodMap(getType());
+                Set<String> residents = currentLocation.getResidents().keySet();
+                Set<String> existingFoodTypes = new HashSet<>(foodMap.keySet());
+                existingFoodTypes.retainAll(residents);
+
+                for (String foodType : existingFoodTypes) {
+                    int probably = foodMap.get(foodType);
+                    Set<Organism> foods = currentLocation
+                            .getResidents()
+                            .get(foodType);
+                    if (foods.size() > 0 && Randomizer.get(probably)) {
+                        Organism food = foods
+                                .iterator()
+                                .next();
+                        double weight = getWeight();
+                        double foodWeight = food.getWeight();
+                        double weightToEat = Math.min(foodWeight, needToEat);
+
+                        setWeight(weight + weightToEat);
+                        food.setWeight(food.getWeight() - weightToEat);
+                        if (!food.isALive()) {
+                            foods.remove(food);
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return false;
+        } finally {
+            currentLocation.getLock().unlock();
+        }
     }
 
-    private void addMe(Location location) {
+
+    @Override
+    public void move(Location startLocation) {
+        int speed = LIMIT.getSPEED();
+        if (speed > 0) {
+            int stepsCount = Randomizer.random(0, speed);
+            Location previousLocation = startLocation;
+            Location destinationLocation = null;
+            int maxCountOnCell = LIMIT.getCOUNT_ON_CELL();
+            for (int i = 0; i < stepsCount; i++) {
+                List<Location> neighborLocations = previousLocation.getNeighboringLocations();
+                if (neighborLocations.size() == 1) {
+                    destinationLocation = neighborLocations.get(0);
+                } else if (neighborLocations.size() > 0) {
+                    destinationLocation = neighborLocations.get(Randomizer.random(0, neighborLocations.size() - 1));
+                }
+                if (destinationLocation != null
+                        && destinationLocation.getResidents().get(getType()).size() < maxCountOnCell) {
+                    previousLocation = destinationLocation;
+                } else {
+                    destinationLocation = previousLocation;
+                }
+            }
+            if (destinationLocation != null && !destinationLocation.equals(startLocation)) {
+                if (isALive()) {
+                    safeMove(startLocation, destinationLocation);
+                }
+            }
+        }
+    }
+
+    protected void safeMove(Location source, Location destination) {
+        if (safeAddTo(destination)) {
+            if (!safePollFrom(source)) {
+                safePollFrom(destination);
+            }
+        }
+    }
+
+    protected boolean safeAddTo(Location location) {
         location.getLock().lock();
         try {
             Set<Organism> set = location.getResidents().get(getType());
-            if (Objects.nonNull(set)) {
-                if (set.size() < getLimit().getMaxCount()) {
-                    set.add(this);
-                }
-            } else {
-                Map<String, Set<Organism>> residents = location.getResidents();
-                residents.put(this.getType(), new HashSet<>());
-                Set<Organism> organisms = residents.get(getType());
-                organisms.add(this);
-            }
-
+            int maxCount = getLimit().getCOUNT_ON_CELL();
+            int size = set.size();
+            return size < maxCount && set.add(this);
         } finally {
             location.getLock().unlock();
         }
     }
 
-    private void removeMe(Location location) {
+    protected boolean safePollFrom(Location location) {
         location.getLock().lock();
         try {
-            location.getResidents().get(getType()).remove(this);
+            return location.getResidents().get(getType()).remove(this);
         } finally {
             location.getLock().unlock();
         }
@@ -56,99 +137,58 @@ public abstract class Animal extends Organism implements Movable, Eating {
 
     @Override
     public void spawn(Location currentLocation) {
-        safeSpawnAnimal(currentLocation);
-    }
-
-    private void safeSpawnAnimal(Location currentLocation) {
         currentLocation.getLock().lock();
         try {
-            Set<Organism> organisms = currentLocation.getResidents().get(getType());
-            double maxWeight = getLimit().getMaxWeight();
-            if (this.getWeight() > maxWeight / 2 &&
-                    organisms.contains(this) &&
-                    organisms.size() >= 2 &&
-                    organisms.size() < getLimit().getMaxCount()) {
-                double childWeight = getLimit().getMaxWeight() / 2;
-                this.setWeight(this.getWeight() - childWeight);
-                Organism clone = this.clone();
-                clone.setWeight(childWeight);
-                organisms.add(clone);
-            }
-        } finally {
-            currentLocation.getLock().unlock();
-        }
-    }
-
-    @Override
-    public void eat(Location currentLocation) {
-        if (safeFindFood(currentLocation)) {
-        } else if (getWeight() > 0) {
-            safeChangeWeight(currentLocation, -1 * Setting.getSetting().getPercentAnimalSlim());
-        } else {
-            safeDie(currentLocation);
-        }
-    }
-
-    protected boolean safeFindFood(Location currentLocation) {
-        currentLocation.getLock().lock();
-        try {
-            double needFood = getNeedFood();
-            if (needFood > 0) {
-                Setting setting = Setting.getSetting();
-                Set<Map.Entry<String, Integer>> foodMap = setting.getRationMap(getType()).entrySet();
-                Iterator<Map.Entry<String, Integer>> iterator = foodMap.iterator();
-
-                while (needFood > 0 && iterator.hasNext()) {
-                    Map.Entry<String, Integer> entry = iterator.next();
-                    String keyFood = entry.getKey();
-                    Integer probably = entry.getValue();
-                    var foods = currentLocation.getResidents().get(keyFood);
-                    if (Objects.nonNull(foods) && !foods.isEmpty() && Randomizer.get(probably))  {
-                            for (Iterator<Organism> organismIterator = foods.iterator(); organismIterator.hasNext(); ) {
-                                Organism o = organismIterator.next();
-                                double foodWeight = o.getWeight();
-                                double delta = Math.min(foodWeight, needFood);
-                                double weight = getWeight();
-                                setWeight(Math.min(weight + delta, getLimit().getMaxWeight()));
-                                o.setWeight(foodWeight - delta);
-                                if (o.getWeight() <= 0) {
-                                    organismIterator.remove();
-                                }
-                                needFood -= delta;
-                                if (needFood <= 0) {
-                                    return true;
-                                }
-                            }
+            double minWeightRatio = sex.equals(Sex.FEMALE) ? 0.9 : 0.5;
+            if (isALive() && getWeight() > getLimit().getMAX_WEIGHT() * minWeightRatio) {
+                Sex partnerSex = sex.equals(Sex.FEMALE) ? Sex.MALE : Sex.FEMALE;
+                Set<Organism> partners = getPartners(currentLocation, partnerSex);
+                if (partners.size() > 0) {
+                    Sex childSex = Sex.values()[Randomizer.random(0, Sex.values().length - 1)];
+                    Animal child = (Animal) Organism.replicate(getPrototype());
+                    child.setSex(childSex);
+                    if (sex.equals(Sex.FEMALE)) {
+                        setWeight(getWeight() - getWeight() * 0.3);
                     }
                 }
-            } else {
-                return false;
             }
-
-        } finally {
-            currentLocation.getLock().unlock();
-        }
-        return false;
-    }
-
-    private double getNeedFood() {
-        return Math.min(
-                getLimit().getMaxFood(),
-                getLimit().getMaxWeight() - getWeight());
-    }
-
-    protected void safeChangeWeight(Location currentLocation, int percent) {
-        currentLocation.getLock().lock();
-        double weight = this.getWeight();
-        try {
-            double maxWeight = getLimit().getMaxWeight();
-            weight += maxWeight * percent / 100;
-            weight = Math.max(0, weight);
-            this.setWeight(Math.min(weight, maxWeight));
-            currentLocation.getResidents().get(this.getClass().getSimpleName());
         } finally {
             currentLocation.getLock().unlock();
         }
     }
 
+    private double getWeightToEat() {
+        double maxEatingWeight = LIMIT.getMAX_EATING_WEIGHT();
+        double hungryWeight = LIMIT.getMAX_WEIGHT() - this.getWeight();
+        return Math.min(hungryWeight, maxEatingWeight);
+    }
+
+    private Set<Organism> getPartners(Location location, Sex partnerSex) {
+        double minWeightRatio = partnerSex.equals(Sex.FEMALE) ? 0.9 : 0.5;
+        Set<Organism> partners;
+        partners = location
+                .getResidents()
+                .get(getType())
+                .stream()
+                .map(o -> ((Animal) o))
+                .filter(a -> a.isALive()
+                        && partnerSex.equals(a.getSex())
+                        && a.getWeight() > a.getWeight() * minWeightRatio)
+                .collect(Collectors.toSet());
+        return partners;
+    }
+
+    private Organism getPrototype() {
+        Organism organism = null;
+        for (Organism prototype : Setting.get().getPrototypes()) {
+            if (getType().equalsIgnoreCase(prototype.getClass().getSimpleName())) {
+                organism = prototype;
+            }
+        }
+        if (organism != null) {
+            return organism;
+        } else {
+            throw new GameException("Prototype not found");
+        }
+    }
 }

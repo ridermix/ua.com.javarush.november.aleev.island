@@ -1,19 +1,18 @@
 package ua.com.aleev.island.view;
 
-import ua.com.aleev.island.entity.map.GameMap;
-import ua.com.aleev.island.entity.map.Location;
 import ua.com.aleev.island.entity.organism.Organism;
-import ua.com.aleev.island.setting.Setting;
+import ua.com.aleev.island.entity.organism.animal.herbivore.Herbivore;
+import ua.com.aleev.island.entity.organism.animal.carivore.Carnivore;
+import ua.com.aleev.island.entity.map.Location;
+import ua.com.aleev.island.entity.map.GameMap;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class ConsoleView implements View {
     private final GameMap gameMap;
-    private final int positions = Setting.getSetting().getPositionForShowInOneCell();
-    private final String border = "=".repeat(positions);
 
     public ConsoleView(GameMap gameMap) {
         this.gameMap = gameMap;
@@ -22,31 +21,12 @@ public class ConsoleView implements View {
 
     @Override
     public String showStatistics() {
-        Location[][] locations = gameMap.getLocations();
-        Map<String, Integer> map = new HashMap<>();
-        for (Location[] row : locations) {
-            for (Location location : row) {
-                Map<String, Set<Organism>> residents = location.getResidents();
-                residents.values().stream()
-                        .filter(s -> s.size() > 0)
-                        .forEach(s -> map.put(s.stream().findAny().get().getIcon(), s.size()));
-                System.out.print(map);
-                map.clear();
-            }
-            System.out.println();
-
-        }
-        return map.toString();
-    }
-
-    @Override
-    public void showGeneralStatistics() {
         Map<String, Integer> statistics = new HashMap<>();
         Location[][] locations = gameMap.getLocations();
         for (Location[] row : locations) {
             for (Location location : row) {
-                Map<String, Set<Organism>> residents = location.getResidents();
-                if (residents != null) {
+                var residents = location.getResidents();
+                if (Objects.nonNull(residents)) {
                     residents.values().stream()
                             .filter(set -> set.size() > 0)
                             .forEach(set -> {
@@ -57,49 +37,70 @@ public class ConsoleView implements View {
                 }
             }
         }
-        System.out.println("=".repeat(100));
-        System.out.print(statistics + "\n");
-        System.out.println("=".repeat(100));
-
+        System.out.println(statistics + "\n");
+        return statistics.toString();
     }
 
     @Override
     public String showMap() {
+        StringBuilder out = new StringBuilder("\n");
         Location[][] locations = gameMap.getLocations();
-        final int cols = gameMap.getCols();
-        final int rows = gameMap.getRows();
-        int oneLocationWidth = positions + 1;
-        int mapWidth = oneLocationWidth * cols + 2;
-        StringBuilder out = new StringBuilder();
+        final int cols = gameMap.WIDTH;
+        final int rows = gameMap.HEIGHT;
         for (int row = 0; row < rows; row++) {
-            out.append(row == 0
-                            ? boardLine(cols, '╔', '╦', '╗')
-                            : boardLine(cols, '╠', '╬', '╣'))
-                    .append("\n");
             for (int col = 0; col < cols; col++) {
-                String residentString = getInstance(locations[row][col]);
-                out.append(String.format("║%-" + positions + "s", residentString));
+                String residentSting = get(locations[row][col]);
+                int cellWidth = 4;
+                out.append(String.format("║%-" + cellWidth + "s", residentSting));
             }
             out.append('║').append("\n");
         }
-        out.append(boardLine(cols, '╚', '╩', '╝')).append("\n");
         System.out.println(out);
         return out.toString();
     }
 
-    private String getInstance(Location location) {
-        return location.getResidents().values().stream()
+    private String get(Location location) {
+        int[] plantsCount = getPlantCount(location);
+        MaxCountAnimal herbivoreMaxCount = getMaxAnimalCount(location, Herbivore.class);
+        MaxCountAnimal predatorMaxCount = getMaxAnimalCount(location, Carnivore.class);
+        return predatorMaxCount.getIcon() + "|" + herbivoreMaxCount.getIcon();
+    }
+
+    private MaxCountAnimal getMaxAnimalCount(Location location, Class<?> clazz) {
+        location.getLock().lock();
+        MaxCountAnimal maxCountAnimal = location.getResidents().values().stream()
                 .filter((list) -> list.size() > 0)
+                .filter((list) -> clazz.isAssignableFrom(list.iterator().next().getClass()))
                 .sorted((o1, o2) -> o2.size() - o1.size())
-                .limit(positions)
-                .map(list -> list.stream().findAny().get().getClass().getSimpleName()
-                        .substring(0, 1)).map(Object::toString).collect(Collectors.joining());
+                .limit(1)
+                .map(list -> {
+                    MaxCountAnimal maxAnimal = new MaxCountAnimal("  ", 0);
+                    Organism organism = list.stream().findAny().orElseThrow();
+                    int maxCount = organism.getLimit().getCOUNT_ON_CELL();
+                    String animalIcon = organism.getIcon();
+                    maxAnimal.setIcon(animalIcon);
+                    maxAnimal.setCount(list.size());
+                    return maxAnimal;
+                })
+                .findAny().orElseGet(MaxCountAnimal::new);
+        location.getLock().unlock();
+        return maxCountAnimal;
     }
 
-    private String boardLine(int cols, char left, char center, char right) {
-        return (IntStream.range(0, cols)
-                .mapToObj(col -> (col == 0 ? left : center) + border)
-                .collect(Collectors.joining("", "", String.valueOf(right))));
+    private int[] getPlantCount(Location location) {
+        location.getLock().lock();
+        int maxCount = 0;
+        Set<Organism> plants = location.getResidents().get("Plant");
+        int count = plants.size();
+        if (count > 0) {
+            maxCount = plants
+                    .stream()
+                    .findAny()
+                    .get()
+                    .getLimit()
+                    .getCOUNT_ON_CELL();
+        }
+        location.getLock().unlock();
+        return new int[]{count, maxCount};
     }
-
 }

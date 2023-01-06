@@ -3,6 +3,10 @@ package ua.com.aleev.island.util;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Randomizer {
+
+    private Randomizer() {
+    }
+
     public static int random(int from, int to) {
         return ThreadLocalRandom.current().nextInt(from, to);
     }
@@ -11,11 +15,8 @@ public class Randomizer {
         return ThreadLocalRandom.current().nextDouble(from, to);
     }
 
-    public static int random(int maxValue) {
-        return ThreadLocalRandom.current().nextInt(maxValue + 1);
-    }
 
-    public static boolean get(int limit) {
-        return random(0, 100) < limit;
+    public static boolean get(int probably) {
+        return random(0, 100) < probably;
     }
 }

@@ -3,23 +3,25 @@ package ua.com.aleev.island.setting;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class DefaultSetting {
-    //General setting
-    //Island setting
-    public static final int ROWS = 70;
-    public static final int COLS = 20;
-
-    public static final int POSITIONS_FOR_SHOW_IN_ONE_CELL = 5;
-
     public static final int PERIOD = 1000;
-    public static final int PERCENT_ANIMAL_SLIM = 10;
-
-    //Organisms settings
+    public static final int ROWS = 4;
+    public static final int COLS = 4;
+    public static final Parameters[] parameters;
     @JsonIgnore
-    static final String[] NAMES = {
+    static final String[] names = {
             "Wolf", "Boa", "Fox", "Bear", "Eagle",
             "Horse", "Deer", "Rabbit", "Mouse", "Goat", "Sheep", "Boar", "Buffalo", "Duck", "Caterpillar",
             "Plant",
     };
+
+    static {
+        parameters = new Parameters[names.length];
+        for (int i = 0; i < parameters.length; i++) {
+            parameters[i] = new Parameters(names[i], "", 0.0, 0.0,
+                    1, 1, 0, 0.0);
+        }
+    }
+
     @JsonIgnore
     static final int[][] setProbablyTable = {
             {0, 0, 0, 0, 0, 10, 15, 60, 80, 60, 70, 15, 10, 40, 0, 0},

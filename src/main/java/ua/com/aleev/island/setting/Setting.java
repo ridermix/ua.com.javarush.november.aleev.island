@@ -1,32 +1,31 @@
 package ua.com.aleev.island.setting;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import ua.com.aleev.island.constant.OrganismTypes;
+import ua.com.aleev.island.constant.Sex;
+import ua.com.aleev.island.entity.organism.Limit;
 import ua.com.aleev.island.entity.organism.Organism;
-import ua.com.aleev.island.entity.organism.animal.carnivore.*;
-import ua.com.aleev.island.entity.organism.animal.herbivore.*;
-import ua.com.aleev.island.entity.organism.plants.Plant;
+import ua.com.aleev.island.entity.organism.animal.Animal;
+import ua.com.aleev.island.entity.organism.plant.Plant;
 import ua.com.aleev.island.exception.GameException;
-import ua.com.aleev.island.factory.OrganismCreator;
+
 import java.io.IOException;
+import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class Setting {
-    public static final String SETTING_YAML = "src/main/resources/config.yaml";
-    private static final Class<?>[] TYPES = {
-            Wolf.class, Boa.class, Fox.class, Bear.class, Eagle.class,
-            Horse.class, Deer.class, Rabbit.class, Mouse.class, Goat.class, Sheep.class, Boar.class, Buffalo.class, Duck.class, Caterpillar.class,
-            Plant.class
-    };
-    public static final Organism[] PROTOTYPES = OrganismCreator.createPrototype(TYPES);
-
+public class Setting implements Serializable {
+    public static final String YAML_FILE = "configuration.yaml";
     private static volatile Setting SETTING;
 
-    public static Setting getSetting() {
+    public static Setting get() {
         Setting setting = SETTING;
         if (Objects.isNull(setting)) {
             synchronized (Setting.class) {
@@ -38,38 +37,37 @@ public class Setting {
         return setting;
     }
 
+    @JsonIgnore
+    private Organism[] prototypes;
+    private int period;
     private int rows;
     private int cols;
-    private int positionForShowInOneCell;
-    private int period;
-    private int percentAnimalSlim;
-    private final Map<String, Map<String, Integer>> rationMap = new LinkedHashMap<>();
+    private Parameters[] parameters;
+    private final Map<String, Map<String, Integer>> probabilityFoodMap = new LinkedHashMap<>();
 
-    public Map<String, Integer> getRationMap(String keyName) {
-        this.rationMap.putIfAbsent(keyName, new LinkedHashMap<>());
-        return rationMap.get(keyName);
+    public Map<String, Integer> getFoodMap(String keyName) {
+        this.probabilityFoodMap.putIfAbsent(keyName, new LinkedHashMap<>());
+        return probabilityFoodMap.get(keyName);
     }
 
-    //INIT Setting
     private Setting() {
-        loadFromDefaultSetting();
+        loadFromDefault();
         updateFromYaml();
     }
 
-    private void loadFromDefaultSetting() {
+    private void loadFromDefault() {
+        period = DefaultSetting.PERIOD;
         rows = DefaultSetting.ROWS;
         cols = DefaultSetting.COLS;
-        positionForShowInOneCell = DefaultSetting.POSITIONS_FOR_SHOW_IN_ONE_CELL;
-
-        period = DefaultSetting.PERIOD;
-        percentAnimalSlim = DefaultSetting.PERCENT_ANIMAL_SLIM;
-        for (int i = 0, n = DefaultSetting.NAMES.length; i < n; i++) {
-            String keyName = DefaultSetting.NAMES[i];
-            this.rationMap.putIfAbsent(keyName, new LinkedHashMap<>());
+        parameters = DefaultSetting.parameters;
+        this.prototypes = createPrototypes();
+        for (int i = 0, n = DefaultSetting.names.length; i < n; i++) {
+            String key = DefaultSetting.names[i];
+            this.probabilityFoodMap.putIfAbsent(key, new LinkedHashMap<>());
             for (int j = 0; j < n; j++) {
                 int ratio = DefaultSetting.setProbablyTable[i][j];
                 if (ratio > 0) {
-                    this.rationMap.get(keyName).put(DefaultSetting.NAMES[j], ratio);
+                    this.probabilityFoodMap.get(key).put(DefaultSetting.names[j], ratio);
                 }
             }
         }
@@ -78,15 +76,21 @@ public class Setting {
     private void updateFromYaml() {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         ObjectReader readerForUpdating = mapper.readerForUpdating(this);
-        URL resourse = Setting.class.getClassLoader().getResource(SETTING_YAML);
-        if (resourse != null) {
+        URL resource = Setting.class.getClassLoader().getResource(YAML_FILE);
+        if (Objects.nonNull(resource)) {
             try {
-                readerForUpdating.readValue(resourse.openStream());
+                readerForUpdating.readValue(resource.openStream());
+                this.prototypes = createPrototypes();
             } catch (IOException e) {
-                throw new GameException("Setting yaml file not found");
+                throw new RuntimeException(e);
             }
         }
     }
+
+    public int getPeriod() {
+        return period;
+    }
+
     public int getRows() {
         return rows;
     }
@@ -95,15 +99,54 @@ public class Setting {
         return cols;
     }
 
-    public int getPositionForShowInOneCell() {
-        return positionForShowInOneCell;
+    public Organism[] getPrototypes() {
+        return prototypes;
     }
 
-    public int getPeriod() {
-        return period;
+    public Map<String, Map<String, Integer>> getProbabilityFoodMap() {
+        return probabilityFoodMap;
     }
 
-    public int getPercentAnimalSlim() {
-        return percentAnimalSlim;
+    public Parameters[] getParameters() {
+        return parameters;
+    }
+
+    private Organism[] createPrototypes() {
+        Organism[] organisms = new Organism[OrganismTypes.values().length];
+        int index = 0;
+        for (OrganismTypes type : OrganismTypes.values()) {
+            for (Parameters parameter : parameters) {
+                if (type.getClazz().getSimpleName().equals(parameter.getName())) {
+                    String name = parameter.getName();
+                    String icon = parameter.getIcon();
+                    Limit limit = new Limit(
+                            parameter.getMaxWeight(),
+                            parameter.getMinWeight(),
+                            parameter.getCount(),
+                            parameter.getSpeed(),
+                            parameter.getFoodWeight()
+                    );
+                    double weight = limit.getMAX_WEIGHT() / parameter.getStartWeightDivisor();
+                    organisms[index++] = generatePrototype(type.getClazz(), name, icon, weight, limit);
+                }
+            }
+        }
+        return organisms;
+    }
+
+    private Organism generatePrototype(Class<?> type, String name, String icon, double weight, Limit limit) {
+        try {
+            Constructor<?> constructor;
+            if ("Plant".equals(type.getSimpleName())) {
+                constructor = type.getConstructor(String.class, String.class, double.class, Limit.class);
+                return (Plant) constructor.newInstance(name, icon, weight, limit);
+            } else {
+                constructor = type.getConstructor(String.class, String.class, double.class, Limit.class, Sex.class);
+                return (Animal) constructor.newInstance(name, icon, weight, limit, Sex.FEMALE);
+            }
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
+                 InvocationTargetException e) {
+            throw new GameException("Entity constructor not found ", e);
+        }
     }
 }

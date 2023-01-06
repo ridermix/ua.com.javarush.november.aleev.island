@@ -1,0 +1,195 @@
+---
+period: 1000
+rows: 50
+cols: 20
+probabilityFoodMap:
+  Wolf:
+    Horse: 10
+    Deer: 15
+    Rabbit: 60
+    Mouse: 80
+    Goat: 60
+    Sheep: 70
+    Boar: 15
+    Buffalo: 10
+    Duck: 40
+  Boa:
+    Fox: 15
+    Rabbit: 20
+    Mouse: 40
+    Duck: 10
+  Fox:
+    Rabbit: 70
+    Mouse: 90
+    Duck: 60
+    Caterpillar: 40
+  Bear:
+    Boa: 80
+    Horse: 40
+    Deer: 80
+    Rabbit: 80
+    Mouse: 90
+    Goat: 70
+    Sheep: 70
+    Boar: 50
+    Buffalo: 20
+    Duck: 10
+  Eagle:
+    Fox: 10
+    Rabbit: 90
+    Mouse: 90
+    Duck: 80
+  Horse:
+    Plant: 100
+  Deer:
+    Plant: 100
+  Rabbit:
+    Plant: 100
+  Mouse:
+    Caterpillar: 90
+    Plant: 100
+  Goat:
+    Plant: 100
+  Sheep:
+    Plant: 100
+  Boar:
+    Mouse: 50
+    Caterpillar: 90
+    Plant: 100
+  Buffalo:
+    Plant: 100
+  Duck:
+    Caterpillar: 90
+    Plant: 100
+  Caterpillar:
+    Plant: 100
+  Plant: {}
+parameters:
+  - name: "Wolf"
+    icon: "🐺"
+    maxWeight: 50.0
+    minWeight: 10.0
+    startWeightDivisor: 10
+    count: 30
+    speed: 3
+    foodWeight: 8.0
+  - name: "Boa"
+    icon: "🐍"
+    maxWeight: 15.0
+    minWeight: 5.0
+    startWeightDivisor: 5
+    count: 30
+    speed: 1
+    foodWeight: 3.0
+  - name: "Fox"
+    icon: "🦊"
+    maxWeight: 8.0
+    minWeight: 2.0
+    startWeightDivisor: 4
+    count: 30
+    speed: 2
+    foodWeight: 2.0
+  - name: "Bear"
+    icon: "🐻"
+    maxWeight: 500.0
+    minWeight: 100.0
+    startWeightDivisor: 5
+    count: 5
+    speed: 2
+    foodWeight: 80.0
+  - name: "Eagle"
+    icon: "🦅"
+    maxWeight: 6.0
+    minWeight: 1.0
+    startWeightDivisor: 4
+    count: 20
+    speed: 3
+    foodWeight: 1.0
+  - name: "Horse"
+    icon: "🐎"
+    maxWeight: 400.0
+    minWeight: 50.0
+    startWeightDivisor: 4
+    count: 20
+    speed: 4
+    foodWeight: 60.0
+  - name: "Deer"
+    icon: "🦌"
+    maxWeight: 300.0
+    minWeight: 50.0
+    startWeightDivisor: 3
+    count: 20
+    speed: 4
+    foodWeight: 50.0
+  - name: "Rabbit"
+    icon: "🐇"
+    maxWeight: 2.0
+    minWeight: 0.5
+    startWeightDivisor: 2
+    count: 150
+    speed: 2
+    foodWeight: 0.45
+  - name: "Mouse"
+    icon: "🐁"
+    maxWeight: 0.05
+    minWeight: 0.0
+    startWeightDivisor: 2
+    count: 500
+    speed: 1
+    foodWeight: 0.01
+  - name: "Goat"
+    icon: "🐐"
+    maxWeight: 60.0
+    minWeight: 10.0
+    startWeightDivisor: 4
+    count: 140
+    speed: 3
+    foodWeight: 10.0
+  - name: "Sheep"
+    icon: "🐑"
+    maxWeight: 70.0
+    minWeight: 20.0
+    startWeightDivisor: 2
+    count: 140
+    speed: 3
+    foodWeight: 15.0
+  - name: "Boar"
+    icon: "🐗"
+    maxWeight: 400.0
+    minWeight: 50.0
+    startWeightDivisor: 3
+    count: 50
+    speed: 2
+    foodWeight: 50.0
+  - name: "Buffalo"
+    icon: "🐃"
+    maxWeight: 700.0
+    minWeight: 50.0
+    startWeightDivisor: 7
+    count: 10
+    speed: 3
+    foodWeight: 100.0
+  - name: "Duck"
+    icon: "🦆"
+    maxWeight: 1.0
+    minWeight: 0.0
+    startWeightDivisor: 5
+    count: 200
+    speed: 4
+    foodWeight: 0.15
+  - name: "Caterpillar"
+    icon: "🐛"
+    maxWeight: 0.1
+    minWeight: 0.0
+    startWeightDivisor: 1
+    count: 1000
+    speed: 0
+    foodWeight: 0.0
+  - name: "Plant"
+    icon: "🌱"
+    maxWeight: 1
+    minWeight: 0.0
+    startWeightDivisor: 1
+    count: 200
+    speed: 0
+    foodWeight: 0.0

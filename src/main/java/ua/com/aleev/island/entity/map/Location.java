@@ -1,21 +1,27 @@
 package ua.com.aleev.island.entity.map;
 
 import ua.com.aleev.island.entity.organism.Organism;
-import ua.com.aleev.island.util.Randomizer;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 public class Location {
-    private final Map<String, Set<Organism>> residents;
-    private List<Location> nextLocation;
+    private final int col;
+    private final int row;
+
     private final Lock lock = new ReentrantLock(true);
 
-    public Location(Map<String, Set<Organism>> residents) {
+    public Lock getLock() {
+        return lock;
+    }
+
+    private final Map<String, Set<Organism>> residents;
+    private final List<Location> neighboringLocations = new ArrayList<>();
+
+    public Location(int col, int row, Map<String, Set<Organism>> residents) {
+        this.col = col;
+        this.row = row;
         this.residents = residents;
     }
 
@@ -23,35 +29,37 @@ public class Location {
         return residents;
     }
 
-    public void setNextLocation(List<Location> nextLocation) {
-        this.nextLocation = nextLocation;
-    }
-
-    public List<Location> getNextLocation() {
-        return nextLocation;
-    }
-
-    public Location getNextLocations(int countStep) {
-        Set<Location> visitedLocations = new HashSet<>();
-        Location currentLocation = this;
-        while (visitedLocations.size() < countStep) {
-            var nextLocations = currentLocation
-                    .nextLocation
-                    .stream()
-                    .filter(location -> !visitedLocations.contains(location)).collect(Collectors.toList());
-            int countDirections = nextLocations.size();
-            if (countDirections > 0) {
-                int index = Randomizer.random(0, countDirections);
-                currentLocation = nextLocations.get(index);
-                visitedLocations.add(currentLocation);
-            } else {
-                break;
+    public void updateNeighbors(GameMap gameMap) {
+        Location[][] mapLocations = gameMap.getLocations();
+        Location locationToAdd;
+        for (int i = row - 1; i <= row + 1; i++) {
+            for (int j = col - 1; j <= col + 1; j++) {
+                if (i >= 0 && j >= 0 && i < gameMap.HEIGHT && j < gameMap.WIDTH) {
+                    locationToAdd = mapLocations[i][j];
+                    if (!this.equals(locationToAdd)) {
+                        neighboringLocations.add(locationToAdd);
+                    }
+                }
             }
         }
-        return currentLocation;
     }
 
-    public Lock getLock() {
-        return lock;
+    public List<Location> getNeighboringLocations() {
+        return neighboringLocations;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Location location = (Location) o;
+        return col == location.col && row == location.row && Objects.equals(lock, location.lock)
+                && Objects.equals(residents, location.residents)
+                && Objects.equals(neighboringLocations, location.neighboringLocations);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(col, row, lock, residents, neighboringLocations);
     }
 }

@@ -1,21 +1,19 @@
 package ua.com.aleev.island.entity.map;
 
 public class GameMap {
+    public final int HEIGHT;
+    public final int WIDTH;
+
     private final Location[][] locations;
 
-    public GameMap(int rows, int cols) {
-        this.locations = new Location[rows][cols];
+    public GameMap(int HEIGHT, int WIDTH) {
+        this.HEIGHT = HEIGHT;
+        this.WIDTH = WIDTH;
+
+        locations = new Location[HEIGHT][WIDTH];
     }
 
     public Location[][] getLocations() {
         return locations;
-    }
-
-    public int getRows() {
-        return locations.length;
-    }
-
-    public int getCols() {
-        return locations[0].length;
     }
 }
